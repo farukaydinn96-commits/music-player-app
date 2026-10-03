@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pulse — Modern Music Player</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="ambient-glow glow-top" aria-hidden="true"></div>
+    <div class="ambient-glow glow-bottom" aria-hidden="true"></div>
+
+    <div
+      id="toast-container"
+      class="toast-container"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="header-inner">
+          <div class="brand-row">
+            <div class="brand-title">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <h1>Kitaplık</h1>
+              <span id="track-count" class="track-count-badge">0 Parça</span>
+            </div>
+
+            <div class="header-actions">
+              <div class="search-box">
+                <svg
+                  class="search-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <input
+                  id="search-input"
+                  type="search"
+                  placeholder="Parça veya sanatçı ara..."
+                  aria-label="Parça veya sanatçı ara"
+                  autocomplete="off"
+                />
+                <kbd class="search-kbd" aria-hidden="true">/</kbd>
+              </div>
+
+              <button
+                id="open-add-modal-btn"
+                class="action-pill-btn"
+                type="button"
+                title="Yeni Parça Ekle"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
+                  />
+                </svg>
+                <span>Parça Ekle</span>
+              </button>
+
+              <button
+                id="open-info-modal-btn"
+                class="icon-circle-btn"
+                type="button"
+                aria-label="Proje Mimarisi ve Kısayollar"
+                title="Proje Mimarisi & Kısayollar (?)"
+              >
+                <span>?</span>
+              </button>
+
+              <div class="profile-wrapper">
+                <button
+                  id="profile-btn"
+                  class="profile-pill"
+                  type="button"
+                  aria-expanded="false"
+                  aria-label="Kullanıcı Profili"
+                >
+                  <span class="profile-avatar">FA</span>
+                  <span class="profile-name">Faruk Aydın</span>
+                  <span class="profile-pro-badge">PRO</span>
+                </button>
+
+                <div
+                  id="profile-popover"
+                  class="profile-popover hidden"
+                  role="dialog"
+                  aria-label="Profil Detayları"
+                >
+                  <div class="popover-header">
+                    <div class="popover-avatar-lg">FA</div>
+                    <div class="popover-user-info">
+                      <h3>FARUK AYDIN</h3>
+                      <p>Full Stack Developer</p>
+                    </div>
+                  </div>
+
+                  <div class="popover-stats">
+                    <div class="stat-card">
+                      <span id="stat-total-tracks" class="stat-val">8</span>
+                      <span class="stat-label">Toplam Parça</span>
+                    </div>
+                    <div class="stat-card">
+                      <span id="stat-fav-tracks" class="stat-val">0</span>
+                      <span class="stat-label">Favoriler</span>
+                    </div>
+                  </div>
+
+                  <div class="popover-links">
+                    <a
+                      href="https://github.com/farukaydinn96-cmd"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="popover-link"
+                    >
+                      <span>GitHub Profili</span>
+                      <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="popover-link"
+                    >
+                      <span>LinkedIn Profili</span>
+                      <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fill-rule="evenodd"
+                          d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </a>
+                    <button
+                      id="reset-storage-btn"
+                      type="button"
+                      class="popover-danger-btn"
+                    >
+                      Varsayılan Verilere Sıfırla
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <nav class="genre-nav" aria-label="Müzik Türleri">
+            <div id="genre-list" class="genre-pills" role="tablist"></div>
+          </nav>
+        </div>
+      </header>
+
+      <main class="app-main" aria-label="Şarkı Listesi">
+        <div class="tracklist-container">
+          <div class="tracklist-header">
+            <span class="col-index">#</span>
+            <button
+              id="sort-title-btn"
+              class="col-sort-btn col-info"
+              type="button"
+            >
+              <span>PARÇA & SANATÇI</span>
+              <span id="sort-title-indicator" class="sort-indicator"></span>
+            </button>
+            <span class="col-genre">TÜR</span>
+            <span class="col-actions"></span>
+            <button
+              id="sort-duration-btn"
+              class="col-sort-btn col-duration"
+              type="button"
+            >
+              <span>SÜRE</span>
+              <span id="sort-duration-indicator" class="sort-indicator"></span>
+            </button>
+          </div>
+
+          <ul
+            id="track-list"
+            class="track-list"
+            role="listbox"
+            aria-label="Şarkılar"
+          ></ul>
+
+          <div id="empty-state" class="empty-state hidden">
+            <p id="empty-state-text">
+              Aramanızla eşleşen bir parça bulunamadı.
+            </p>
+            <button id="reset-filter-btn" class="reset-btn" type="button">
+              Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="now-playing-bar" aria-label="Şu An Çalıyor">
+        <div class="now-playing-card">
+          <div class="video-stage">
+            <div class="youtube-frame-wrapper">
+              <div id="youtube-player"></div>
+              <button
+                id="video-poster-overlay"
+                class="video-poster-overlay"
+                type="button"
+                aria-label="Videoyu Oynat"
+              >
+                <img id="video-poster-img" src="" alt="Parça Önizlemesi" />
+                <div class="poster-play-badge">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M7.25 5.65c0-.85.92-1.38 1.66-.94l10.02 5.95c.72.43.72 1.47 0 1.9L8.91 18.5c-.74.44-1.66-.09-1.66-.94V5.65Z"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="player-controls-stage">
+            <div class="player-top-row">
+              <div class="now-playing-meta">
+                <div class="live-status-row">
+                  <span id="equalizer-badge" class="eq-bars" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </span>
+                  <span id="now-playing-genre" class="now-genre-label"
+                    >SEÇİLİ PARÇA</span
+                  >
+                </div>
+                <div class="now-title-row">
+                  <h2 id="now-playing-title" class="now-title">
+                    Bir şarkı seçin
+                  </h2>
+                  <button
+                    id="now-fav-btn"
+                    class="now-fav-btn"
+                    type="button"
+                    aria-label="Favorilere Ekle veya Çıkar"
+                    title="Favorilere Ekle"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p id="now-playing-artist" class="now-artist">
+                  Oynatmak için listeden bir parçaya tıklayın
+                </p>
+              </div>
+
+              <div class="transport-cluster">
+                <div
+                  class="transport-controls"
+                  role="group"
+                  aria-label="Oynatma Kontrolleri"
+                >
+                  <button
+                    id="shuffle-btn"
+                    class="ctrl-btn ghost-btn"
+                    type="button"
+                    aria-label="Karışık Çal"
+                    title="Karışık Çal (Shuffle)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M17.28 3.22a.75.75 0 0 1 1.06 0l2.44 2.44a.75.75 0 0 1 0 1.06l-2.44 2.44a.75.75 0 1 1-1.06-1.06l1.16-1.16h-2.19a3.75 3.75 0 0 0-3 1.5l-5.1 6.8a5.25 5.25 0 0 1-4.2 2.1H2.75a.75.75 0 0 1 0-1.5h1.2a3.75 3.75 0 0 0 3-1.5l5.1-6.8a5.25 5.25 0 0 1 4.2-2.1h2.19l-1.16-1.16a.75.75 0 0 1 0-1.06ZM2.75 6.75h1.2a5.25 5.25 0 0 1 4.2 2.1l.72.96a.75.75 0 1 1-1.2.9l-.72-.96a3.75 3.75 0 0 0-3-1.5H2.75a.75.75 0 0 1 0-1.5Zm14.53 8.09a.75.75 0 0 1 1.06 0l2.44 2.44a.75.75 0 0 1 0 1.06l-2.44 2.44a.75.75 0 1 1-1.06-1.06l1.16-1.16h-2.19a5.25 5.25 0 0 1-4.2-2.1l-.78-1.04a.75.75 0 1 1 1.2-.9l.78 1.04a3.75 3.75 0 0 0 3 1.5h2.19l-1.16-1.16a.75.75 0 0 1 0-1.06Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="prev-btn"
+                    class="ctrl-btn secondary-btn"
+                    type="button"
+                    aria-label="Önceki Şarkı"
+                    title="Önceki (Sol Ok)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M6 6.75a.75.75 0 0 1 1.5 0v10.5a.75.75 0 0 1-1.5 0V6.75ZM18.04 6.13c.65-.41 1.46.06 1.46.83v10.08c0 .77-.81 1.24-1.46.83l-7.95-5.04a.98.98 0 0 1 0-1.66l7.95-5.04Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="play-pause-btn"
+                    class="ctrl-btn primary-play-btn"
+                    type="button"
+                    aria-label="Oynat veya Duraklat"
+                    title="Oynat / Duraklat (Boşluk Tuşu)"
+                  >
+                    <svg
+                      id="icon-play"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M7.25 5.65c0-.85.92-1.38 1.66-.94l10.02 5.95c.72.43.72 1.47 0 1.9L8.91 18.5c-.74.44-1.66-.09-1.66-.94V5.65Z"
+                      />
+                    </svg>
+                    <svg
+                      id="icon-pause"
+                      class="hidden"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M7.5 5.25A1.75 1.75 0 0 0 5.75 7v10c0 .97.78 1.75 1.75 1.75h1A1.75 1.75 0 0 0 10.25 17V7c0-.97-.78-1.75-1.75-1.75h-1Zm7.5 0A1.75 1.75 0 0 0 13.25 7v10c0 .97.78 1.75 1.75 1.75h1A1.75 1.75 0 0 0 17.75 17V7c0-.97-.78-1.75-1.75-1.75h-1Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="next-btn"
+                    class="ctrl-btn secondary-btn"
+                    type="button"
+                    aria-label="Sonraki Şarkı"
+                    title="Sonraki (Sağ Ok)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M16.5 6.75a.75.75 0 0 1 1.5 0v10.5a.75.75 0 0 1-1.5 0V6.75ZM4.5 6.96c0-.77.81-1.24 1.46-.83l7.95 5.04a.98.98 0 0 1 0 1.66l-7.95 5.04c-.65.41-1.46-.06-1.46-.83V6.96Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="repeat-btn"
+                    class="ctrl-btn ghost-btn"
+                    type="button"
+                    aria-label="Tekrarla"
+                    title="Parçayı Tekrarla (Repeat)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M17.28 2.22a.75.75 0 0 1 1.06 0l2.44 2.44a.75.75 0 0 1 0 1.06l-2.44 2.44a.75.75 0 1 1-1.06-1.06l1.16-1.16H7.25A3.75 3.75 0 0 0 3.5 9.69v1.56a.75.75 0 0 1-1.5 0V9.69a5.25 5.25 0 0 1 5.25-5.25h11.19l-1.16-1.16a.75.75 0 0 1 0-1.06ZM6.72 21.78a.75.75 0 0 1-1.06 0l-2.44-2.44a.75.75 0 0 1 0-1.06l2.44-2.44a.75.75 0 1 1 1.06 1.06l-1.16 1.16h11.19a3.75 3.75 0 0 0 3.75-3.75v-1.56a.75.75 0 0 1 1.5 0v1.56a5.25 5.25 0 0 1-5.25 5.25H5.56l1.16 1.16a.75.75 0 0 1 0 1.06Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="volume-control">
+                  <button
+                    id="mute-btn"
+                    class="ctrl-btn ghost-btn"
+                    type="button"
+                    aria-label="Sesi Kapat veya Aç"
+                    title="Sesi Kapat / Aç (M)"
+                  >
+                    <svg
+                      id="icon-vol-high"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z"
+                      />
+                      <path
+                        d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z"
+                      />
+                    </svg>
+                    <svg
+                      id="icon-vol-mute"
+                      class="hidden"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 1 0-1.06-1.06l-1.72 1.72-1.72-1.72Z"
+                      />
+                    </svg>
+                  </button>
+                  <div class="volume-slider-wrapper">
+                    <input
+                      id="volume-slider"
+                      type="range"
+                      min="0"
+                      max="100"
+                      value="80"
+                      step="1"
+                      aria-label="Ses Seviyesi"
+                    />
+                    <div id="volume-fill" class="volume-fill"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="progress-row">
+              <span id="current-time" class="time-stamp">0:00</span>
+              <div class="progress-bar-wrapper">
+                <input
+                  id="seek-slider"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="0"
+                  step="0.1"
+                  aria-label="Şarkı İlerleme Çubuğu"
+                />
+                <div id="progress-fill" class="progress-fill"></div>
+              </div>
+              <span id="total-duration" class="time-stamp">0:00</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <div
+      id="add-track-modal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-modal-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="add-modal-title">Yeni Parça Ekle (YouTube)</h2>
+          <button
+            id="close-add-modal-btn"
+            class="modal-close-btn"
+            type="button"
+            aria-label="Kapat"
+          >
+            ✕
+          </button>
+        </div>
+        <form id="add-track-form" class="modal-form">
+          <div class="form-field">
+            <label for="input-yt-url">YouTube Video Linki veya ID</label>
+            <input
+              id="input-yt-url"
+              type="text"
+              placeholder="Örn: https://www.youtube.com/watch?v=jfKfPfyJRdk"
+              required
+            />
+          </div>
+          <div class="form-field">
+            <label for="input-track-title">Parça Adı</label>
+            <input
+              id="input-track-title"
+              type="text"
+              placeholder="Örn: Late Night Coding Session"
+              required
+            />
+          </div>
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="input-track-artist">Sanatçı / Kanal</label>
+              <input
+                id="input-track-artist"
+                type="text"
+                placeholder="Örn: Lofi Girl"
+                required
+              />
+            </div>
+            <div class="form-field">
+              <label for="input-track-genre">Tür (Genre)</label>
+              <select id="input-track-genre">
+                <option value="Synthwave">Synthwave</option>
+                <option value="Electronic">Electronic</option>
+                <option value="Lo-Fi">Lo-Fi</option>
+                <option value="Ambient">Ambient</option>
+                <option value="Rock">Rock</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="cancel-add-modal-btn" type="button" class="btn-ghost">
+              İptal
+            </button>
+            <button type="submit" class="btn-primary">Kitaplığa Ekle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="info-modal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="info-modal-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="info-modal-title">Proje Mimarisi & Kısayollar</h2>
+          <button
+            id="close-info-modal-btn"
+            class="modal-close-btn"
+            type="button"
+            aria-label="Kapat"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="info-modal-body">
+          <div class="arch-badges">
+            <span class="arch-badge">Vanilla JS (ES6+)</span>
+            <span class="arch-badge">State-Driven UI</span>
+            <span class="arch-badge">YouTube IFrame API</span>
+            <span class="arch-badge">LocalStorage CRUD</span>
+            <span class="arch-badge">WAI-ARIA Accessible</span>
+          </div>
+          <p class="arch-desc">
+            Bu uygulama herhangi bir harici UI kütüphanesi kullanılmadan, Clean
+            Architecture ve reaktif durum yönetimi (state management)
+            prensipleriyle geliştirilmiştir.
+          </p>
+          <div class="shortcuts-grid">
+            <div class="shortcut-item">
+              <kbd>Space</kbd><span>Oynat / Duraklat</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>→</kbd><span>Sonraki Parça</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>←</kbd><span>Önceki Parça</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>/</kbd><span>Arama Çubuğu</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>M</kbd><span>Sesi Kapat / Aç</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>N</kbd><span>Yeni Parça Ekle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
