@@ -17,11 +17,11 @@ const DEFAULT_TRACKS = [
   },
   {
     id: "t3",
-    title: "Coffee Shop Radio — Beats to Relax/Study",
+    title: "Coffee Shop Radio — Chill Lofi Study Beats",
     artist: "Lofi Girl",
     genre: "Lo-Fi",
-    duration: "4:15",
-    youtubeId: "jfKfPfyJRdk",
+    duration: "3:24",
+    youtubeId: "n61ULEU7CO0",
   },
   {
     id: "t4",
@@ -33,27 +33,27 @@ const DEFAULT_TRACKS = [
   },
   {
     id: "t5",
-    title: "Coding Mode — Deep Focus Flow",
-    artist: "Chillstep Collective",
+    title: "Coding Mode — Cyberpunk Trap & Bass",
+    artist: "Mokka No Copyright Music",
     genre: "Electronic",
-    duration: "5:12",
-    youtubeId: "DWcJFNfaw9c",
+    duration: "2:48",
+    youtubeId: "K4DyBUG242c",
   },
   {
     id: "t6",
-    title: "Tokyo Rain — Late Night Vibes",
-    artist: "Kudasai",
+    title: "Tokyo Rain — Aesthetic Lofi Hip Hop",
+    artist: "Lofi Geek",
     genre: "Lo-Fi",
-    duration: "3:18",
-    youtubeId: "5yx6BWlEVcY",
+    duration: "3:12",
+    youtubeId: "lTRiuFIWV54",
   },
   {
     id: "t7",
-    title: "Horizon — Melodic Techno Journey",
-    artist: "Afterlife Sessions",
+    title: "Horizon — Synthwave & Chillwave Mix",
+    artist: "Lofi Girl Synthwave",
     genre: "Synthwave",
-    duration: "4:45",
-    youtubeId: "21qNxnCS8WU",
+    duration: "4:15",
+    youtubeId: "S_MOd40zlYU",
   },
   {
     id: "t8",
@@ -66,8 +66,8 @@ const DEFAULT_TRACKS = [
 ];
 
 const STORAGE_KEYS = {
-  FAVORITES: "pulse_favorites_v2",
-  CUSTOM_TRACKS: "pulse_tracks_v2",
+  FAVORITES: "pulse_favorites_v4",
+  CUSTOM_TRACKS: "pulse_tracks_v4",
 };
 
 const state = {
@@ -88,6 +88,7 @@ const state = {
   isMuted: false,
   volume: 80,
   isPlayerReady: false,
+  pendingPlay: false,
   progressTimer: null,
 };
 
@@ -148,6 +149,7 @@ const dom = {
 };
 
 function showToast(message) {
+  if (!dom.toastContainer) return;
   const toast = document.createElement("div");
   toast.className = "toast-item";
   toast.innerHTML = `<span class="toast-dot"></span><span>${message}</span>`;
@@ -182,8 +184,9 @@ function saveStateToStorage() {
     STORAGE_KEYS.CUSTOM_TRACKS,
     JSON.stringify(state.tracks),
   );
-  dom.statTotalTracks.textContent = state.tracks.length;
-  dom.statFavTracks.textContent = state.favorites.length;
+  if (dom.statTotalTracks)
+    dom.statTotalTracks.textContent = state.tracks.length;
+  if (dom.statFavTracks) dom.statFavTracks.textContent = state.favorites.length;
 }
 
 function getAvailableGenres() {
@@ -298,10 +301,14 @@ function renderGenres() {
 }
 
 function updateSortIndicators() {
-  dom.sortTitleIndicator.textContent =
-    state.sortBy === "title" ? (state.sortAsc ? "↑" : "↓") : "";
-  dom.sortDurationIndicator.textContent =
-    state.sortBy === "duration" ? (state.sortAsc ? "↑" : "↓") : "";
+  if (dom.sortTitleIndicator) {
+    dom.sortTitleIndicator.textContent =
+      state.sortBy === "title" ? (state.sortAsc ? "↑" : "↓") : "";
+  }
+  if (dom.sortDurationIndicator) {
+    dom.sortDurationIndicator.textContent =
+      state.sortBy === "duration" ? (state.sortAsc ? "↑" : "↓") : "";
+  }
 }
 
 function renderTrackList() {
@@ -362,7 +369,11 @@ function renderTrackList() {
     const playSelected = () => {
       const globalIndex = state.tracks.findIndex((t) => t.id === track.id);
       if (globalIndex !== -1) {
-        selectAndPlayTrack(globalIndex);
+        if (state.currentTrackIndex === globalIndex) {
+          togglePlayPause();
+        } else {
+          selectAndPlayTrack(globalIndex);
+        }
       }
     };
 
@@ -386,7 +397,9 @@ function updateNowPlayingMeta() {
   dom.nowArtist.textContent = track.artist;
   dom.nowGenre.textContent = track.genre;
   dom.totalDurationEl.textContent = track.duration;
-  dom.videoPosterImg.src = `https://i.ytimg.com/vi/${track.youtubeId}/hqdefault.jpg`;
+  if (dom.videoPosterImg) {
+    dom.videoPosterImg.src = `https://i.ytimg.com/vi/${track.youtubeId}/hqdefault.jpg`;
+  }
 
   if (state.favorites.includes(track.id)) {
     dom.nowFavBtn.classList.add("favorited");
@@ -401,16 +414,20 @@ function updatePlayPauseUI(isPlaying) {
     dom.iconPlay.classList.add("hidden");
     dom.iconPause.classList.remove("hidden");
     dom.eqBadge.classList.add("playing");
-    dom.videoPosterOverlay.classList.add("playing-hide");
+    if (dom.videoPosterOverlay)
+      dom.videoPosterOverlay.classList.add("playing-hide");
   } else {
     dom.iconPlay.classList.remove("hidden");
     dom.iconPause.classList.add("hidden");
     dom.eqBadge.classList.remove("playing");
-    dom.videoPosterOverlay.classList.remove("playing-hide");
+    if (dom.videoPosterOverlay)
+      dom.videoPosterOverlay.classList.remove("playing-hide");
   }
 }
 
-window.onYouTubeIframeAPIReady = function () {
+function initYouTubePlayer() {
+  if (ytPlayer || !window.YT || !window.YT.Player) return;
+
   const initialTrack = state.tracks[state.currentTrackIndex];
 
   ytPlayer = new YT.Player("youtube-player", {
@@ -421,7 +438,6 @@ window.onYouTubeIframeAPIReady = function () {
       rel: 0,
       modestbranding: 1,
       playsinline: 1,
-      origin: window.location.origin,
     },
     events: {
       onReady: onPlayerReady,
@@ -429,12 +445,23 @@ window.onYouTubeIframeAPIReady = function () {
       onError: onPlayerError,
     },
   });
+}
+
+window.onYouTubeIframeAPIReady = function () {
+  initYouTubePlayer();
 };
 
 function onPlayerReady() {
   state.isPlayerReady = true;
-  ytPlayer.setVolume(state.volume);
+  if (ytPlayer && typeof ytPlayer.setVolume === "function") {
+    ytPlayer.setVolume(state.volume);
+  }
   updateNowPlayingMeta();
+
+  if (state.pendingPlay) {
+    state.pendingPlay = false;
+    ytPlayer.playVideo();
+  }
 }
 
 function onPlayerStateChange(event) {
@@ -458,7 +485,7 @@ function onPlayerStateChange(event) {
 }
 
 function onPlayerError() {
-  showToast("Bu video gömülü oynatmaya kısıtlı, sıradaki parçaya geçiliyor...");
+  showToast("Video gömülü oynatmaya kısıtlı, sıradaki parçaya geçiliyor...");
   setTimeout(playNextTrack, 1200);
 }
 
@@ -474,17 +501,33 @@ function selectAndPlayTrack(index) {
     ytPlayer &&
     typeof ytPlayer.loadVideoById === "function"
   ) {
+    if (dom.videoPosterOverlay)
+      dom.videoPosterOverlay.classList.add("playing-hide");
     ytPlayer.loadVideoById(track.youtubeId);
+  } else {
+    state.pendingPlay = true;
+    initYouTubePlayer();
   }
 }
 
 function togglePlayPause() {
-  if (!state.isPlayerReady || !ytPlayer) return;
+  if (
+    !state.isPlayerReady ||
+    !ytPlayer ||
+    typeof ytPlayer.getPlayerState !== "function"
+  ) {
+    state.pendingPlay = true;
+    initYouTubePlayer();
+    showToast("Oynatıcı hazırlanıyor, lütfen bekleyin...");
+    return;
+  }
 
   const playerState = ytPlayer.getPlayerState();
   if (playerState === YT.PlayerState.PLAYING) {
     ytPlayer.pauseVideo();
   } else {
+    if (dom.videoPosterOverlay)
+      dom.videoPosterOverlay.classList.add("playing-hide");
     ytPlayer.playVideo();
   }
 }
@@ -596,8 +639,14 @@ function initApp() {
   renderTrackList();
   updateNowPlayingMeta();
 
+  if (window.YT && window.YT.Player) {
+    initYouTubePlayer();
+  }
+
   dom.playPauseBtn.addEventListener("click", togglePlayPause);
-  dom.videoPosterOverlay.addEventListener("click", togglePlayPause);
+  if (dom.videoPosterOverlay) {
+    dom.videoPosterOverlay.addEventListener("click", togglePlayPause);
+  }
   dom.nextBtn.addEventListener("click", playNextTrack);
   dom.prevBtn.addEventListener("click", playPrevTrack);
 
@@ -607,11 +656,15 @@ function initApp() {
     showToast(state.isShuffle ? "Karışık çalma aktif" : "Karışık çalma kapalı");
   });
 
-  dom.repeatBtn.addEventListener("click", () => {
-    state.isRepeat = !state.isRepeat;
-    dom.repeatBtn.classList.toggle("active", state.isRepeat);
-    showToast(state.isRepeat ? "Parça tekrarı aktif" : "Parça tekrarı kapalı");
-  });
+  if (dom.repeatBtn) {
+    dom.repeatBtn.addEventListener("click", () => {
+      state.isRepeat = !state.isRepeat;
+      dom.repeatBtn.classList.toggle("active", state.isRepeat);
+      showToast(
+        state.isRepeat ? "Parça tekrarı aktif" : "Parça tekrarı kapalı",
+      );
+    });
+  }
 
   dom.nowFavBtn.addEventListener("click", () => {
     const currentTrack = state.tracks[state.currentTrackIndex];
@@ -628,25 +681,29 @@ function initApp() {
     renderTrackList();
   });
 
-  dom.sortTitleBtn.addEventListener("click", () => {
-    if (state.sortBy === "title") {
-      state.sortAsc = !state.sortAsc;
-    } else {
-      state.sortBy = "title";
-      state.sortAsc = true;
-    }
-    renderTrackList();
-  });
+  if (dom.sortTitleBtn) {
+    dom.sortTitleBtn.addEventListener("click", () => {
+      if (state.sortBy === "title") {
+        state.sortAsc = !state.sortAsc;
+      } else {
+        state.sortBy = "title";
+        state.sortAsc = true;
+      }
+      renderTrackList();
+    });
+  }
 
-  dom.sortDurationBtn.addEventListener("click", () => {
-    if (state.sortBy === "duration") {
-      state.sortAsc = !state.sortAsc;
-    } else {
-      state.sortBy = "duration";
-      state.sortAsc = true;
-    }
-    renderTrackList();
-  });
+  if (dom.sortDurationBtn) {
+    dom.sortDurationBtn.addEventListener("click", () => {
+      if (state.sortBy === "duration") {
+        state.sortAsc = !state.sortAsc;
+      } else {
+        state.sortBy = "duration";
+        state.sortAsc = true;
+      }
+      renderTrackList();
+    });
+  }
 
   dom.resetFilterBtn.addEventListener("click", () => {
     state.selectedGenre = "Tümü";
@@ -663,67 +720,80 @@ function initApp() {
     dom.profileBtn.setAttribute("aria-expanded", !isHidden);
   });
 
-  dom.resetStorageBtn.addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEYS.CUSTOM_TRACKS);
-    localStorage.removeItem(STORAGE_KEYS.FAVORITES);
-    state.tracks = [...DEFAULT_TRACKS];
-    state.favorites = ["t1"];
-    state.selectedGenre = "Tümü";
-    state.currentTrackIndex = 0;
-    saveStateToStorage();
-    renderGenres();
-    renderTrackList();
-    updateNowPlayingMeta();
-    dom.profilePopover.classList.add("hidden");
-    showToast("Kitaplık varsayılan verilere sıfırlandı");
-  });
+  if (dom.resetStorageBtn) {
+    dom.resetStorageBtn.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEYS.CUSTOM_TRACKS);
+      localStorage.removeItem(STORAGE_KEYS.FAVORITES);
+      state.tracks = [...DEFAULT_TRACKS];
+      state.favorites = ["t1"];
+      state.selectedGenre = "Tümü";
+      state.currentTrackIndex = 0;
+      saveStateToStorage();
+      renderGenres();
+      renderTrackList();
+      updateNowPlayingMeta();
+      dom.profilePopover.classList.add("hidden");
+      showToast("Kitaplık varsayılan verilere sıfırlandı");
+    });
+  }
 
-  dom.openAddModalBtn.addEventListener("click", () => {
-    dom.addTrackModal.classList.remove("hidden");
-    dom.inputYtUrl.focus();
-  });
+  if (dom.openAddModalBtn) {
+    dom.openAddModalBtn.addEventListener("click", () => {
+      dom.addTrackModal.classList.remove("hidden");
+      dom.inputYtUrl.focus();
+    });
+  }
 
   const closeAddModal = () => {
+    if (!dom.addTrackModal) return;
     dom.addTrackModal.classList.add("hidden");
     dom.addTrackForm.reset();
   };
 
-  dom.closeAddModalBtn.addEventListener("click", closeAddModal);
-  dom.cancelAddModalBtn.addEventListener("click", closeAddModal);
+  if (dom.closeAddModalBtn)
+    dom.closeAddModalBtn.addEventListener("click", closeAddModal);
+  if (dom.cancelAddModalBtn)
+    dom.cancelAddModalBtn.addEventListener("click", closeAddModal);
 
-  dom.addTrackForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const ytId = parseYouTubeId(dom.inputYtUrl.value);
-    if (!ytId) {
-      showToast("Geçerli bir YouTube linki veya 11 haneli ID girin");
-      return;
-    }
+  if (dom.addTrackForm) {
+    dom.addTrackForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const ytId = parseYouTubeId(dom.inputYtUrl.value);
+      if (!ytId) {
+        showToast("Geçerli bir YouTube linki veya 11 haneli ID girin");
+        return;
+      }
 
-    const newTrack = {
-      id: "t_" + Date.now(),
-      title: dom.inputTrackTitle.value.trim(),
-      artist: dom.inputTrackArtist.value.trim(),
-      genre: dom.inputTrackGenre.value,
-      duration: "3:30",
-      youtubeId: ytId,
-    };
+      const newTrack = {
+        id: "t_" + Date.now(),
+        title: dom.inputTrackTitle.value.trim(),
+        artist: dom.inputTrackArtist.value.trim(),
+        genre: dom.inputTrackGenre.value,
+        duration: "3:30",
+        youtubeId: ytId,
+      };
 
-    state.tracks.unshift(newTrack);
-    saveStateToStorage();
-    renderGenres();
-    renderTrackList();
-    selectAndPlayTrack(0);
-    closeAddModal();
-    showToast("Yeni parça kitaplığa eklendi");
-  });
+      state.tracks.unshift(newTrack);
+      saveStateToStorage();
+      renderGenres();
+      renderTrackList();
+      selectAndPlayTrack(0);
+      closeAddModal();
+      showToast("Yeni parça kitaplığa eklendi");
+    });
+  }
 
-  dom.openInfoModalBtn.addEventListener("click", () => {
-    dom.infoModal.classList.remove("hidden");
-  });
+  if (dom.openInfoModalBtn) {
+    dom.openInfoModalBtn.addEventListener("click", () => {
+      dom.infoModal.classList.remove("hidden");
+    });
+  }
 
-  dom.closeInfoModalBtn.addEventListener("click", () => {
-    dom.infoModal.classList.add("hidden");
-  });
+  if (dom.closeInfoModalBtn) {
+    dom.closeInfoModalBtn.addEventListener("click", () => {
+      dom.infoModal.classList.add("hidden");
+    });
+  }
 
   document.addEventListener("click", (e) => {
     if (
@@ -733,8 +803,9 @@ function initApp() {
       dom.profilePopover.classList.add("hidden");
       dom.profileBtn.setAttribute("aria-expanded", "false");
     }
-    if (e.target === dom.addTrackModal) closeAddModal();
-    if (e.target === dom.infoModal) dom.infoModal.classList.add("hidden");
+    if (dom.addTrackModal && e.target === dom.addTrackModal) closeAddModal();
+    if (dom.infoModal && e.target === dom.infoModal)
+      dom.infoModal.classList.add("hidden");
   });
 
   dom.seekSlider.addEventListener("input", (e) => {
@@ -757,7 +828,7 @@ function initApp() {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeAddModal();
-      dom.infoModal.classList.add("hidden");
+      if (dom.infoModal) dom.infoModal.classList.add("hidden");
       dom.profilePopover.classList.add("hidden");
       return;
     }
@@ -779,7 +850,7 @@ function initApp() {
       playPrevTrack();
     } else if (e.key.toLowerCase() === "m") {
       toggleMute();
-    } else if (e.key.toLowerCase() === "n") {
+    } else if (e.key.toLowerCase() === "n" && dom.addTrackModal) {
       e.preventDefault();
       dom.addTrackModal.classList.remove("hidden");
       dom.inputYtUrl.focus();
